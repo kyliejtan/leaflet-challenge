@@ -1,5 +1,5 @@
 // Store our API endpoint inside queryUrl
-var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+let queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
 
 function chooseColor(magnitude) {
     if (magnitude < 1) {
@@ -43,11 +43,7 @@ function createFeatures(earthquakeData) {
 
   // Create a GeoJSON layer containing the features array on the earthquakeData object
   // Run the onEachFeature function once for each piece of data in the array
-  var earthquakes = L.geoJSON(earthquakeData, {
-    onEachFeature: onEachFeature
-  });
-
-  var earthquakes = L.geoJSON(earthquakeData, {
+  let earthquakes = L.geoJSON(earthquakeData, {
       pointToLayer: function (feature, latlng) {
           return L.circleMarker(latlng, {
               radius: Math.pow(2,feature.properties.mag),
@@ -67,14 +63,14 @@ function createFeatures(earthquakeData) {
 function createMap(earthquakes) {
 
   // Define streetmap and darkmap layers
-  var streetmap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  let streetmap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
     attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
     maxZoom: 18,
     id: "mapbox.streets",
     accessToken: API_KEY
   });
 
-  var darkmap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  let darkmap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
     attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
     maxZoom: 18,
     id: "mapbox.dark",
@@ -82,23 +78,39 @@ function createMap(earthquakes) {
   });
 
   // Define a baseMaps object to hold our base layers
-  var baseMaps = {
+  let baseMaps = {
     "Street Map": streetmap,
     "Dark Map": darkmap
   };
 
   // Create overlay object to hold our overlay layer
-  var overlayMaps = {
+  let overlayMaps = {
     Earthquakes: earthquakes
   };
 
   // Create our map, giving it the streetmap and earthquakes layers to display on load
-  var myMap = L.map("map", {
+  let myMap = L.map("map", {
     center: [
-      37.09, -95.71
+      30, 0
     ],
-    zoom: 5,
-    layers: [streetmap, earthquakes]
+    zoom: 2.6,
+    minZoom: 2.6,
+    layers: [darkmap, earthquakes]
+  });
+
+  let boundaryUrl = "https://github.com/fraxen/tectonicplates/blob/master/GeoJSON/PB2002_boundaries.json";
+
+  //access data and create layer
+  d3.json(boundaryUrl, function(response) {
+      //create geoJSON layer and add to map
+      geoPlates = L.geoJSON(response, {
+          style: {
+              color: "orange",
+              weight: 2,
+              smoothFactor: 1,
+              opacity: 1
+          }
+      }).addTo(myMap);
   });
 
   // Create a layer control
@@ -108,3 +120,23 @@ function createMap(earthquakes) {
     collapsed: false
   }).addTo(myMap);
 }
+//set up the legend
+var legend = L.control({position: 'bottomright'});
+legend.onAdd = function() {
+    //create a legend element
+    var div = L.DomUtil.create('div', 'info legend');
+
+    //create labels and values to find colors
+    var labels = ["0-1", "1-2", "2-3", "3-4", "4-5", "5+"];
+    var grades = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5];
+
+    //create legend html
+    div.innerHTML = '<div><strong>Legend</strong></div>';
+    for(var i = 0; i < grades.length; i++) {
+        div.innerHTML += '<i style = "background: ' + circleColor(grades[i]) + '">&nbsp;</i>&nbsp;&nbsp;'
+        + labels[i] + '<br/>';
+    };
+    return div;
+};
+//add legend to map
+legend.addTo(myMap);
