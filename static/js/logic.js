@@ -1,6 +1,30 @@
 // Store our API endpoint inside queryUrl
 var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
 
+function chooseColor(magnitude) {
+    if (magnitude < 1) {
+        return "#4FFF2F"
+    }
+    else if (magnitude < 2) {
+        return "#BAFF2F"
+    }
+    else if (magnitude < 3) {
+        return "#FFC300"
+    }
+    else if (magnitude < 4) {
+        return "#FF5733"
+    }
+    else if (magnitude < 5) {
+        return "#C70039"
+    }
+    else if (magnitude < 6) {
+        return "#900C3F"
+    }
+    else {
+        return "#581845"
+    };
+};
+
 // Perform a GET request to the query URL
 d3.json(queryUrl, function(data) {
   // Once we get a response, send the data.features object to the createFeatures function
@@ -14,6 +38,7 @@ function createFeatures(earthquakeData) {
   function onEachFeature(feature, layer) {
     layer.bindPopup("<h3>" + feature.properties.place +
       "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
+
   }
 
   // Create a GeoJSON layer containing the features array on the earthquakeData object
@@ -22,6 +47,19 @@ function createFeatures(earthquakeData) {
     onEachFeature: onEachFeature
   });
 
+  var earthquakes = L.geoJSON(earthquakeData, {
+      pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, {
+              radius: Math.pow(2,feature.properties.mag),
+              fillColor: chooseColor(feature.properties.mag),
+              color: "#000",
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.8
+          });
+      },
+      onEachFeature: onEachFeature
+  });
   // Sending our earthquakes layer to the createMap function
   createMap(earthquakes);
 }
