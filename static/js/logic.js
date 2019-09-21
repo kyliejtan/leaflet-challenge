@@ -1,7 +1,7 @@
 // Store our API endpoint inside queryUrl
 let queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
 
-function chooseColor(magnitude) {
+function colorSelector(magnitude) {
     if (magnitude < 1) {
         return "#4FFF2F"
     }
@@ -47,7 +47,7 @@ function createFeatures(earthquakeData) {
       pointToLayer: function (feature, latlng) {
           return L.circleMarker(latlng, {
               radius: Math.pow(2,feature.properties.mag),
-              fillColor: chooseColor(feature.properties.mag),
+              fillColor: colorSelector(feature.properties.mag),
               color: "#000",
               weight: 1,
               opacity: 1,
@@ -98,7 +98,7 @@ function createMap(earthquakes) {
     layers: [darkmap, earthquakes]
   });
 
-  let boundaryUrl = "https://github.com/fraxen/tectonicplates/blob/master/GeoJSON/PB2002_boundaries.json";
+  let boundaryUrl = "https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json";
 
   //access data and create layer
   d3.json(boundaryUrl, function(response) {
